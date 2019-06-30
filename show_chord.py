@@ -1,7 +1,6 @@
 import mido
 import rtmidi
 import signal
-import pychord
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 PITDH_LIST = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -124,6 +123,8 @@ def notes_to_chord(note_list):
                     chord += "+5"
                 elif (root_note + 6) % 12 in note_list:
                     chord += "-5"
+                else:
+                    continue
             elif (root_note + 11) % 12 in note_list:
                 chord += "M7"
             elif (root_note + 9) % 12 in note_list:
@@ -142,10 +143,10 @@ def notes_to_chord(note_list):
                 chord += "M9"
             elif (root_note + 9) % 12 in note_list and (root_note + 2) % 12 in note_list:
                 chord += "69"
-            elif (root_note + 10) % 12 in note_list and (root_note + 3) % 12 in note_list:
-                chord += "+9"
-            elif (root_note + 10) % 12 in note_list and (root_note + 1) % 12 in note_list:
-                chord += "-9"
+            elif (root_note + 10) % 12 in note_list and (root_note + 3) % 12 in note_list and chord[-1] != "7":
+                chord += "7+9"
+            elif (root_note + 10) % 12 in note_list and (root_note + 1) % 12 in note_list and chord[-1] != "7":
+                chord += "7-9"
             else:
                 continue
             possibility_chords.append(chord)
@@ -156,8 +157,8 @@ while True:
     msg = inport.receive()
     if msg.type == 'note_on':
         note_on_list.append(msg.note)
+        if len(note_on_list) >= 3:
+            notes_to_chord(note_on_list)
     if msg.type == 'note_off':
         note_on_list.remove(msg.note)
-    if len(note_on_list) >= 3:
-        notes_to_chord(note_on_list)
     outport.send(msg)
